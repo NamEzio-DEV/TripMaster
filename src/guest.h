@@ -11,8 +11,13 @@
 #define ID_CARD_LEN    13   /* CCCD 12 chữ số + '\0' */
 #define PHONE_LEN      11   /* SĐT 10 chữ số + '\0' */
 
-#define ID_CARD_DIGITS 12
-#define PHONE_DIGITS   10
+/* CCCD / SĐT chỉ gồm chữ số, độ dài trong khoảng MIN..MAX (MAX bị giới hạn bởi kích thước mảng) */
+#define ID_CARD_MIN_DIGITS 1
+#define ID_CARD_MAX_DIGITS (ID_CARD_LEN - 1)
+#define PHONE_MIN_DIGITS   1
+#define PHONE_MAX_DIGITS   (PHONE_LEN - 1)
+
+#define GUEST_ID_PREFIX "KH"   /* Mã khách tự sinh: KH001, KH002, ... */
 
 #define LIST_DUPLICATE_ID_CARD -4
 
@@ -35,6 +40,11 @@ GuestNode *findGuestById(GuestNode *head, const char *guestId);
 GuestNode *findGuestByIdCard(GuestNode *head, const char *idCard);
 int        searchGuestsByName(const GuestNode *head, const char *keyword); /* In kết quả, trả về số lượng */
 int        countGuests(const GuestNode *head);
+
+/* Sinh mã khách mới chưa trùng: GUEST_ID_PREFIX + số thứ tự lớn nhất + 1 */
+void       generateGuestId(GuestNode *head, char *out, int size);
+/* 1 nếu từ khóa xuất hiện trong mã, họ tên, CCCD hoặc SĐT (không phân biệt hoa thường) */
+int        guestMatches(const Guest *g, const char *keyword);
 
 void printGuestHeader(void);
 void printGuestRow(const Guest *g);

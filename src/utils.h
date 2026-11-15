@@ -40,7 +40,7 @@ int    inputInt(const char *prompt, int min, int max);
 double inputDouble(const char *prompt, double min, double max);
 void   inputString(const char *prompt, char *buf, int size, int allowEmpty);
 void   inputCode(const char *prompt, char *buf, int size);      /* Mã: không rỗng, không dấu cách, viết hoa */
-void   inputDigits(const char *prompt, char *buf, int exactLen); /* Chuỗi chữ số đúng độ dài */
+void   inputDigits(const char *prompt, char *buf, int minLen, int maxLen); /* Chỉ gồm chữ số, độ dài minLen..maxLen */
 Date   inputDate(const char *prompt);
 int    inputYesNo(const char *prompt);
 
@@ -48,7 +48,7 @@ int    inputYesNo(const char *prompt);
 int    inputIntOrKeep(const char *prompt, int min, int max, int current);
 double inputDoubleOrKeep(const char *prompt, double min, double max, double current);
 void   inputStringOrKeep(const char *prompt, char *buf, int size);
-void   inputDigitsOrKeep(const char *prompt, char *buf, int exactLen);
+void   inputDigitsOrKeep(const char *prompt, char *buf, int minLen, int maxLen);
 Date   inputDateOrKeep(const char *prompt, Date current);
 
 void pauseScreen(void);

@@ -61,6 +61,7 @@ int  cmpRoomByTypeThenPrice(const Room *a, const Room *b);
 /* Lọc: in các phòng thỏa điều kiện, trả về số phòng in ra */
 int filterRoomByType(const Room *r, const void *ctx);      /* ctx: const int* */
 int filterRoomByPrice(const Room *r, const void *ctx);     /* ctx: const PriceRange* */
+int filterRoomByIdContains(const Room *r, const void *ctx); /* ctx: const char* (một phần mã phòng) */
 int printRoomsIf(const RoomNode *head, RoomFilterFn pred, const void *ctx);
 
 void printRoomHeader(void);
