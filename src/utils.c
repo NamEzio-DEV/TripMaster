@@ -264,15 +264,27 @@ void inputCode(const char *prompt, char *buf, int size) {
     }
 }
 
-void inputDigits(const char *prompt, char *buf, int exactLen) {
+static int isDigitsInRange(const char *s, int minLen, int maxLen) {
+    int len = (int)strlen(s);
+    return isDigitsOnly(s) && len >= minLen && len <= maxLen;
+}
+
+static void printDigitsError(int minLen, int maxLen) {
+    if (minLen == maxLen)
+        printf("  [!] Phai gom dung %d chu so.\n", minLen);
+    else
+        printf("  [!] Chi duoc nhap chu so, tu %d den %d ky tu.\n", minLen, maxLen);
+}
+
+void inputDigits(const char *prompt, char *buf, int minLen, int maxLen) {
     char line[LINE_BUF];
     for (;;) {
         printf("%s", prompt);
-        if (readLine(line, sizeof(line)) && isDigitsOnly(line) && (int)strlen(line) == exactLen) {
+        if (readLine(line, sizeof(line)) && isDigitsInRange(line, minLen, maxLen)) {
             strcpy(buf, line);
             return;
         }
-        printf("  [!] Phai gom dung %d chu so.\n", exactLen);
+        printDigitsError(minLen, maxLen);
     }
 }
 
@@ -340,17 +352,18 @@ void inputStringOrKeep(const char *prompt, char *buf, int size) {
     }
 }
 
-void inputDigitsOrKeep(const char *prompt, char *buf, int exactLen) {
+void inputDigitsOrKeep(const char *prompt, char *buf, int minLen, int maxLen) {
     char line[LINE_BUF];
     for (;;) {
         printf("%s [%s]: ", prompt, buf);
         if (!readLine(line, sizeof(line))) { printf("  [!] Dong nhap qua dai.\n"); continue; }
         if (line[0] == '\0') return;
-        if (isDigitsOnly(line) && (int)strlen(line) == exactLen) {
+        if (isDigitsInRange(line, minLen, maxLen)) {
             strcpy(buf, line);
             return;
         }
-        printf("  [!] Phai gom dung %d chu so (Enter de giu nguyen).\n", exactLen);
+        printDigitsError(minLen, maxLen);
+        printf("      (Enter de giu nguyen)\n");
     }
 }
 

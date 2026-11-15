@@ -128,6 +128,11 @@ int filterRoomByPrice(const Room *r, const void *ctx) {
     return r->pricePerNight >= range->minPrice && r->pricePerNight <= range->maxPrice;
 }
 
+/* Tìm gần đúng: "2" khớp P201, P202, P102...; không phân biệt hoa thường */
+int filterRoomByIdContains(const Room *r, const void *ctx) {
+    return containsIgnoreCase(r->roomId, (const char *)ctx);
+}
+
 /* ---------- In ---------- */
 
 void printRoomHeader(void) {

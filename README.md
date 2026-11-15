@@ -41,7 +41,10 @@ Muốn bắt đầu với dữ liệu trống thì xóa thư mục `data/`; chư
 - Ngày phải hợp lệ (đúng số ngày trong tháng, tính năm nhuận) và ngày trả > ngày nhận. Mỗi lần đặt tối đa 365 đêm.
 - Số đêm = `dateToDays(checkOut) - dateToDays(checkIn)`, nên tính đúng cả khi qua cuối tháng hoặc cuối năm (30/12 → 02/01 = 3 đêm).
 - Trạng thái phiếu: 0 Đã đặt → 1 Đang ở (check-in) → 2 Đã trả (check-out). Chỉ phiếu Đã đặt mới hủy được (→ 3).
-- Mã phòng, mã khách và CCCD không được trùng. CCCD gồm 12 chữ số, số điện thoại gồm 10 chữ số.
+- Mã phòng, mã khách và CCCD không được trùng. Mã khách do chương trình tự sinh (KH001, KH002, ...).
+- CCCD và số điện thoại chỉ gồm chữ số, tối đa lần lượt 12 và 10 ký tự. Độ dài tối thiểu chỉnh bằng `ID_CARD_MIN_DIGITS` / `PHONE_MIN_DIGITS` trong `guest.h`.
+- Tìm phòng theo mã là tìm gần đúng: nhập `2` sẽ ra mọi phòng có chữ `2` trong mã.
+- Khi đặt phòng, sửa, xóa hoặc xem lịch sử khách, người dùng tìm khách theo tên, CCCD, SĐT hoặc mã rồi chọn theo số thứ tự (STT). Khi đặt phòng có thể thêm khách mới ngay tại bước chọn khách.
 - Không được xóa phòng hoặc khách đang có phiếu Đã đặt / Đang ở.
 
 ### Tính tiền (các mức khai báo bằng `#define` trong `booking.h`)

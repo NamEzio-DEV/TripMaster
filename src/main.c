@@ -104,20 +104,25 @@ static void uiDeleteRoom(void) {
     }
 }
 
+/* Tìm gần đúng theo mã phòng: nhập "2" sẽ ra mọi phòng có chữ "2" trong mã */
 static void uiFindRoom(void) {
-    char id[ROOM_ID_LEN];
-    RoomNode *node;
-    inputCode("Ma phong can tim: ", id, ROOM_ID_LEN);
-    node = findRoomById(g_rooms, id);
-    if (node == NULL) {
-        printf("[!] Khong tim thay phong %s.\n", id);
+    char key[ROOM_ID_LEN];
+    RoomNode *p;
+    int count;
+
+    inputString("Nhap ma phong (hoac mot phan ma): ", key, ROOM_ID_LEN, 0);
+    count = printRoomsIf(g_rooms, filterRoomByIdContains, key);
+    if (count == 0) {
+        printf("[!] Khong co phong nao co ma chua \"%s\".\n", key);
         return;
     }
-    printRoomHeader();
-    printRoomRow(&node->data);
-    printf("+------------+------+-----------------+----------------------------------------------------+\n");
-    printf("Phong %s %s.\n", node->data.roomId,
-           hasActiveBookingForRoom(g_bookings, node->data.roomId) ? "dang co phieu dat / khach o" : "khong co phieu dat nao dang hieu luc");
+    for (p = g_rooms; p != NULL; p = p->next) {
+        if (filterRoomByIdContains(&p->data, key)) {
+            printf("  - %-10s: %s\n", p->data.roomId,
+                   hasActiveBookingForRoom(g_bookings, p->data.roomId)
+                       ? "dang co phieu dat / khach o" : "khong co phieu dat nao dang hieu luc");
+        }
+    }
 }
 
 static void uiFilterRoomByType(void) {
@@ -175,49 +180,119 @@ static void menuRoom(void) {
 
 /* ============================ KHÁCH ============================ */
 
-static void uiAddGuest(void) {
+/*
+ * Nhập thông tin và thêm một khách mới. Mã khách được sinh tự động.
+ * Trả về node vừa thêm, hoặc NULL nếu người dùng bỏ ngang / lỗi.
+ */
+static GuestNode *createGuestInteractive(void) {
     Guest g;
+    GuestNode *other;
     int rc;
+
     memset(&g, 0, sizeof(g));
-    printTitle("THEM KHACH");
-    inputCode("Ma khach (toi da 11 ky tu): ", g.guestId, GUEST_ID_LEN);
-    if (findGuestById(g_guests, g.guestId) != NULL) {
-        printf("[!] Ma khach %s da ton tai.\n", g.guestId);
-        return;
-    }
+    generateGuestId(g_guests, g.guestId, GUEST_ID_LEN);
+    printf("Ma khach (tu dong): %s\n", g.guestId);
     inputString("Ho ten: ", g.fullName, GUEST_NAME_LEN, 0);
-    inputDigits("CCCD (12 chu so): ", g.idCard, ID_CARD_DIGITS);
-    if (findGuestByIdCard(g_guests, g.idCard) != NULL) {
-        printf("[!] CCCD %s da duoc dang ky cho khach khac.\n", g.idCard);
-        return;
+    for (;;) {
+        inputDigits("CCCD (chi gom chu so, toi da 12): ", g.idCard, ID_CARD_MIN_DIGITS, ID_CARD_MAX_DIGITS);
+        other = findGuestByIdCard(g_guests, g.idCard);
+        if (other == NULL) break;
+        printf("[!] CCCD %s da duoc dang ky cho khach %s - %s.\n",
+               g.idCard, other->data.guestId, other->data.fullName);
+        if (!inputYesNo("Nhap CCCD khac?")) return NULL;
     }
-    inputDigits("So dien thoai (10 chu so): ", g.phone, PHONE_DIGITS);
+    inputDigits("So dien thoai (chi gom chu so, toi da 10): ", g.phone, PHONE_MIN_DIGITS, PHONE_MAX_DIGITS);
 
     rc = addGuest(&g_guests, g);
-    if (rc == LIST_OK) {
-        printf("Da them khach %s.\n", g.guestId);
-        autoSave();
-    } else if (rc == LIST_DUPLICATE) {
-        printf("[!] Ma khach da ton tai.\n");
-    } else if (rc == LIST_DUPLICATE_ID_CARD) {
-        printf("[!] CCCD da ton tai.\n");
-    } else {
-        printf("[!] Khong du bo nho.\n");
+    if (rc != LIST_OK) {
+        printf("[!] %s\n", rc == LIST_DUPLICATE_ID_CARD ? "CCCD da ton tai."
+                         : rc == LIST_DUPLICATE ? "Ma khach da ton tai." : "Khong du bo nho.");
+        return NULL;
+    }
+    printf("Da them khach %s - %s.\n", g.guestId, g.fullName);
+    autoSave();
+    return findGuestById(g_guests, g.guestId);
+}
+
+static void uiAddGuest(void) {
+    printTitle("THEM KHACH");
+    createGuestInteractive();
+}
+
+/* In các khách khớp từ khóa kèm số thứ tự (STT), trả về số khách tìm thấy */
+static int printGuestMatches(const char *key) {
+    const GuestNode *p;
+    int stt = 0;
+    printf("+-----+-------------+--------------------------------+--------------+------------+\n");
+    printf("| STT | %-11s | %-30s | %-12s | %-10s |\n", "Ma khach", "Ho ten", "CCCD", "SDT");
+    printf("+-----+-------------+--------------------------------+--------------+------------+\n");
+    for (p = g_guests; p != NULL; p = p->next) {
+        if (guestMatches(&p->data, key)) {
+            stt++;
+            printf("| %3d | %-11s | %-30.30s | %-12s | %-10s |\n", stt,
+                   p->data.guestId, p->data.fullName, p->data.idCard, p->data.phone);
+        }
+    }
+    printf("+-----+-------------+--------------------------------+--------------+------------+\n");
+    return stt;
+}
+
+static GuestNode *nthGuestMatch(const char *key, int n) {
+    GuestNode *p;
+    for (p = g_guests; p != NULL; p = p->next) {
+        if (guestMatches(&p->data, key) && --n == 0) return p;
+    }
+    return NULL;
+}
+
+/*
+ * Chọn khách mà không cần nhớ mã: tìm theo tên / CCCD / SĐT / mã (gần đúng),
+ * rồi chọn theo STT. allowCreate = 1 thì cho phép thêm khách mới ngay tại đây.
+ * Trả về NULL nếu người dùng hủy.
+ */
+static GuestNode *pickGuest(int allowCreate) {
+    char key[GUEST_NAME_LEN];
+    GuestNode *created;
+    int count, choice, addOption;
+
+    if (g_guests == NULL && !allowCreate) {
+        printf("[!] Chua co khach nao.\n");
+        return NULL;
+    }
+    for (;;) {
+        if (g_guests == NULL) {
+            printf("Chua co khach nao trong he thong.\n");
+            count = 0;
+            key[0] = '\0';
+        } else {
+            inputString("Tim khach (ten, CCCD, SDT hoac ma; Enter = xem tat ca): ", key, GUEST_NAME_LEN, 1);
+            count = printGuestMatches(key);
+            if (count == 0) printf("Khong tim thay khach phu hop voi \"%s\".\n", key);
+        }
+
+        addOption = allowCreate ? count + 1 : -2;
+        if (count > 0) printf("  1..%d: chon khach theo STT\n", count);
+        if (allowCreate) printf("  %d: them khach moi\n", addOption);
+        printf("  0: tim lai\n -1: huy\n");
+        choice = inputInt("Chon: ", -1, allowCreate ? addOption : count);
+
+        if (choice == -1) return NULL;
+        if (choice == 0) continue;
+        if (choice <= count) return nthGuestMatch(key, choice);
+
+        printTitle("THEM KHACH MOI");
+        created = createGuestInteractive();
+        if (created != NULL) return created;
     }
 }
 
 static void uiUpdateGuest(void) {
-    char id[GUEST_ID_LEN];
     char name[GUEST_NAME_LEN], idCard[ID_CARD_LEN], phone[PHONE_LEN];
     GuestNode *node, *other;
 
     printTitle("SUA THONG TIN KHACH");
-    inputCode("Ma khach can sua: ", id, GUEST_ID_LEN);
-    node = findGuestById(g_guests, id);
-    if (node == NULL) {
-        printf("[!] Khong tim thay khach %s.\n", id);
-        return;
-    }
+    node = pickGuest(0);
+    if (node == NULL) return;
     strcpy(name, node->data.fullName);
     strcpy(idCard, node->data.idCard);
     strcpy(phone, node->data.phone);
@@ -225,13 +300,13 @@ static void uiUpdateGuest(void) {
     printf("(Nhan Enter de giu nguyen gia tri trong ngoac)\n");
     inputStringOrKeep("Ho ten", name, GUEST_NAME_LEN);
     for (;;) {
-        inputDigitsOrKeep("CCCD (12 chu so)", idCard, ID_CARD_DIGITS);
+        inputDigitsOrKeep("CCCD (chi gom chu so, toi da 12)", idCard, ID_CARD_MIN_DIGITS, ID_CARD_MAX_DIGITS);
         other = findGuestByIdCard(g_guests, idCard);
         if (other == NULL || other == node) break;
         printf("[!] CCCD nay da thuoc ve khach %s.\n", other->data.guestId);
         strcpy(idCard, node->data.idCard);
     }
-    inputDigitsOrKeep("So dien thoai (10 chu so)", phone, PHONE_DIGITS);
+    inputDigitsOrKeep("So dien thoai (chi gom chu so, toi da 10)", phone, PHONE_MIN_DIGITS, PHONE_MAX_DIGITS);
 
     updateGuest(&node->data, name, idCard, phone);
     printf("Da cap nhat khach %s.\n", node->data.guestId);
@@ -240,12 +315,11 @@ static void uiUpdateGuest(void) {
 
 static void uiDeleteGuest(void) {
     char id[GUEST_ID_LEN];
+    GuestNode *node;
     printTitle("XOA KHACH");
-    inputCode("Ma khach can xoa: ", id, GUEST_ID_LEN);
-    if (findGuestById(g_guests, id) == NULL) {
-        printf("[!] Khong tim thay khach %s.\n", id);
-        return;
-    }
+    node = pickGuest(0);
+    if (node == NULL) return;
+    strcpy(id, node->data.guestId);  /* Sao chép trước vì node sẽ bị free */
     if (hasActiveBookingForGuest(g_bookings, id)) {
         printf("[!] Khong the xoa: khach %s dang co phieu dat hoac dang o.\n", id);
         return;
@@ -260,7 +334,7 @@ static void uiDeleteGuest(void) {
 static void uiFindGuestByIdCard(void) {
     char idCard[ID_CARD_LEN];
     GuestNode *node;
-    inputDigits("CCCD can tim (12 chu so): ", idCard, ID_CARD_DIGITS);
+    inputDigits("CCCD can tim: ", idCard, ID_CARD_MIN_DIGITS, ID_CARD_MAX_DIGITS);
     node = findGuestByIdCard(g_guests, idCard);
     if (node == NULL) {
         printf("[!] Khong co khach nao co CCCD %s.\n", idCard);
@@ -278,15 +352,13 @@ static void uiSearchGuestByName(void) {
 }
 
 static void uiGuestHistory(void) {
-    char id[GUEST_ID_LEN];
+    GuestNode *node;
     int count;
-    inputCode("Ma khach: ", id, GUEST_ID_LEN);
-    if (findGuestById(g_guests, id) == NULL) {
-        printf("[!] Khong tim thay khach %s (van hien thi lich su neu con).\n", id);
-    }
-    printf("Lich su dat phong cua %s (moi nhat truoc):\n", id);
+    node = pickGuest(0);
+    if (node == NULL) return;
+    printf("Lich su dat phong cua %s - %s (moi nhat truoc):\n", node->data.guestId, node->data.fullName);
     printBookingHeader();
-    count = printHistoryReverse(g_bookings, id);
+    count = printHistoryReverse(g_bookings, node->data.guestId);
     printBookingFooter();
     printf("Tong: %d phieu.\n", count);
 }
@@ -344,8 +416,13 @@ static void uiCheckAvailability(void) {
     listAvailableRooms(g_rooms, g_bookings, in, out);
 }
 
+/*
+ * Luồng đặt phòng: nhập ngày -> chọn phòng trống -> chọn khách (tìm theo
+ * tên/CCCD/SĐT, chọn theo STT, hoặc thêm khách mới ngay) -> xác nhận.
+ * Không bắt người dùng phải nhớ mã khách.
+ */
 static void uiCreateBooking(void) {
-    char guestId[GUEST_ID_LEN], roomId[ROOM_ID_LEN];
+    char roomId[ROOM_ID_LEN];
     GuestNode *guest;
     RoomNode *room;
     Date in, out;
@@ -354,35 +431,44 @@ static void uiCreateBooking(void) {
     Invoice inv;
 
     printTitle("DAT PHONG");
-    if (g_rooms == NULL || g_guests == NULL) {
-        printf("[!] Can co it nhat mot phong va mot khach truoc khi dat phong.\n");
+    if (g_rooms == NULL) {
+        printf("[!] Can co it nhat mot phong truoc khi dat phong.\n");
         return;
     }
 
-    inputCode("Ma khach: ", guestId, GUEST_ID_LEN);
-    guest = findGuestById(g_guests, guestId);
-    if (guest == NULL) {
-        printf("[!] Khong tim thay khach %s. Hay them khach truoc.\n", guestId);
-        return;
-    }
-    printf("Khach: %s - CCCD %s\n", guest->data.fullName, guest->data.idCard);
-
+    /* Bước 1: khoảng ngày */
     inputDateRange(&in, &out);
     if (compareDate(in, getToday()) < 0 &&
         !inputYesNo("Ngay nhan phong da qua. Van tiep tuc?")) {
         return;
     }
 
+    /* Bước 2: chọn phòng trong danh sách phòng trống */
     if (listAvailableRooms(g_rooms, g_bookings, in, out) == 0) {
         printf("[!] Khong con phong trong trong khoang ngay nay.\n");
         return;
     }
-    inputCode("Chon ma phong: ", roomId, ROOM_ID_LEN);
-    room = findRoomById(g_rooms, roomId);
-    if (room == NULL) {
-        printf("[!] Khong tim thay phong %s.\n", roomId);
+    for (;;) {
+        inputCode("Chon ma phong: ", roomId, ROOM_ID_LEN);
+        room = findRoomById(g_rooms, roomId);
+        if (room == NULL) {
+            printf("[!] Khong tim thay phong %s.\n", roomId);
+        } else if (!isRoomAvailable(g_bookings, room->data.roomId, in, out)) {
+            printf("[!] Phong %s da co nguoi dat trong khoang ngay nay.\n", room->data.roomId);
+        } else {
+            break;
+        }
+        if (!inputYesNo("Chon phong khac?")) return;
+    }
+
+    /* Bước 3: chọn khách */
+    printf("\n--- Chon khach dat phong ---\n");
+    guest = pickGuest(1);
+    if (guest == NULL) {
+        printf("Da huy dat phong.\n");
         return;
     }
+    printf("Khach: %s - %s - CCCD %s\n", guest->data.guestId, guest->data.fullName, guest->data.idCard);
 
     /* Tạm tính để khách xác nhận */
     memset(&preview, 0, sizeof(preview));
@@ -396,7 +482,8 @@ static void uiCreateBooking(void) {
     printf(" => Tam tinh: %.0f VND\n", inv.total);
     if (!inputYesNo("Xac nhan dat phong?")) return;
 
-    rc = createBooking(&g_bookings, g_rooms, g_guests, roomId, guestId, in, out, &newId);
+    rc = createBooking(&g_bookings, g_rooms, g_guests, room->data.roomId, guest->data.guestId,
+                       in, out, &newId);
     if (rc == BK_OK) {
         printf("Dat phong thanh cong. Ma phieu: %d\n", newId);
         autoSave();
