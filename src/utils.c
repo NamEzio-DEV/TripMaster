@@ -1,9 +1,3 @@
-/*
- * utils.c - Cài đặt các hàm tiện ích: ngày tháng, chuỗi, nhập dữ liệu.
- *
- * Mọi thao tác nhập đều đọc nguyên một dòng bằng fgets rồi mới phân tích,
- * nhờ vậy nhập chữ vào ô số không làm kẹt bộ đệm như khi dùng scanf.
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,8 +5,6 @@
 #include <time.h>
 #include <errno.h>
 #include "utils.h"
-
-/* ====================== NGÀY THÁNG ====================== */
 
 int isLeapYear(int year) {
     return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
@@ -32,11 +24,7 @@ int isValidDate(Date d) {
     return 1;
 }
 
-/*
- * Đổi ngày sang số ngày liên tục (thuật toán "days from civil").
- * Hiệu của hai giá trị chính là số ngày giữa hai mốc, kể cả khi qua
- * cuối tháng, cuối năm hay năm nhuận. Ví dụ 30/12 -> 02/01 = 3.
- */
+/* Chuyen ngay thanh moc lien tuc de tinh chenh lech qua thang, nam. */
 long dateToDays(Date d) {
     long y = d.year;
     long m = d.month;
@@ -92,8 +80,6 @@ void formatDate(Date d, char *buf, size_t size) {
     snprintf(buf, size, "%02d/%02d/%04d", d.day, d.month, d.year);
 }
 
-/* ====================== CHUỖI ====================== */
-
 void trim(char *s) {
     size_t len, start = 0;
     if (s == NULL) return;
@@ -137,14 +123,6 @@ int isDigitsOnly(const char *s) {
     return 1;
 }
 
-/* ====================== NHẬP DỮ LIỆU ====================== */
-
-/*
- * Đọc một dòng từ bàn phím, bỏ ký tự xuống dòng và khoảng trắng hai đầu.
- * Trả về 1 nếu đọc được, 0 nếu dòng dài quá bộ đệm (phần thừa bị bỏ).
- * Gặp EOF (Ctrl+Z / hết dữ liệu) thì thoát chương trình; dữ liệu đã được
- * lưu sau mỗi thao tác nên không bị mất.
- */
 int readLine(char *buf, int size) {
     size_t len;
     if (fgets(buf, size, stdin) == NULL) {
@@ -167,7 +145,6 @@ int readLine(char *buf, int size) {
     return 1;
 }
 
-/* Phân tích số nguyên; trả về 1 nếu cả chuỗi là một số hợp lệ */
 static int parseInt(const char *s, int *out) {
     char *end;
     long v;
@@ -185,12 +162,11 @@ static int parseDouble(const char *s, double *out) {
     if (*s == '\0') return 0;
     errno = 0;
     v = strtod(s, &end);
-    if (*end != '\0' || errno == ERANGE || v != v) return 0; /* v != v: NaN */
+    if (*end != '\0' || errno == ERANGE || v != v) return 0;
     *out = v;
     return 1;
 }
 
-/* Phân tích "dd/mm/yyyy" (chấp nhận cả dấu '-' hoặc '.') */
 static int parseDate(const char *s, Date *out) {
     Date d;
     char extra;

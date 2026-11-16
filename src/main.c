@@ -1,11 +1,3 @@
-/*
- * main.c - Chương trình Quản lý đặt phòng khách sạn.
- *
- * Cách dùng:  hotel [thu_muc_du_lieu]
- *   Không truyền tham số thì dùng thư mục mặc định DATA_DIR ("data/").
- *
- * main chỉ làm 4 việc: loadAll -> menuLoop -> saveAll -> giải phóng bộ nhớ.
- */
 #include <stdio.h>
 #include <string.h>
 #include "utils.h"
@@ -15,12 +7,10 @@
 #include "report.h"
 #include "fileio.h"
 
-/* Ba danh sách chính, chỉ dùng trong file này và truyền vào các module */
 static RoomNode    *g_rooms = NULL;
 static GuestNode   *g_guests = NULL;
 static BookingNode *g_bookings = NULL;
 
-/* Lưu ngay sau mỗi thao tác thêm/sửa/xóa để tắt ngang không mất dữ liệu */
 static void autoSave(void) {
     if (!saveAll(g_rooms, g_guests, g_bookings)) {
         printf("[!] Luu du lieu that bai. Kiem tra thu muc %s\n", getDataDir());
@@ -32,8 +22,6 @@ static void printTitle(const char *title) {
     printf("  %s\n", title);
     printf("============================================================\n");
 }
-
-/* ============================ PHÒNG ============================ */
 
 static void uiAddRoom(void) {
     Room r;
@@ -104,7 +92,6 @@ static void uiDeleteRoom(void) {
     }
 }
 
-/* Tìm gần đúng theo mã phòng: nhập "2" sẽ ra mọi phòng có chữ "2" trong mã */
 static void uiFindRoom(void) {
     char key[ROOM_ID_LEN];
     RoomNode *p;
@@ -138,7 +125,7 @@ static void uiFilterRoomByPrice(void) {
 }
 
 static void uiSortRooms(void) {
-    /* Bảng con trỏ hàm: chọn tiêu chí theo chỉ số */
+
     static const RoomCompareFn comparators[] = {
         cmpRoomById, cmpRoomByPriceAsc, cmpRoomByPriceDesc, cmpRoomByTypeThenPrice
     };
@@ -147,7 +134,7 @@ static void uiSortRooms(void) {
     choice = inputInt("Chon tieu chi: ", 1, 4);
     sortRooms(g_rooms, comparators[choice - 1]);
     printRooms(g_rooms);
-    autoSave();  /* Giữ thứ tự đã sắp xếp cho lần chạy sau */
+    autoSave();
 }
 
 static void menuRoom(void) {
@@ -178,12 +165,6 @@ static void menuRoom(void) {
     } while (choice != 0);
 }
 
-/* ============================ KHÁCH ============================ */
-
-/*
- * Nhập thông tin và thêm một khách mới. Mã khách được sinh tự động.
- * Trả về node vừa thêm, hoặc NULL nếu người dùng bỏ ngang / lỗi.
- */
 static GuestNode *createGuestInteractive(void) {
     Guest g;
     GuestNode *other;
@@ -219,7 +200,6 @@ static void uiAddGuest(void) {
     createGuestInteractive();
 }
 
-/* In các khách khớp từ khóa kèm số thứ tự (STT), trả về số khách tìm thấy */
 static int printGuestMatches(const char *key) {
     const GuestNode *p;
     int stt = 0;
@@ -245,11 +225,6 @@ static GuestNode *nthGuestMatch(const char *key, int n) {
     return NULL;
 }
 
-/*
- * Chọn khách mà không cần nhớ mã: tìm theo tên / CCCD / SĐT / mã (gần đúng),
- * rồi chọn theo STT. allowCreate = 1 thì cho phép thêm khách mới ngay tại đây.
- * Trả về NULL nếu người dùng hủy.
- */
 static GuestNode *pickGuest(int allowCreate) {
     char key[GUEST_NAME_LEN];
     GuestNode *created;
@@ -319,7 +294,7 @@ static void uiDeleteGuest(void) {
     printTitle("XOA KHACH");
     node = pickGuest(0);
     if (node == NULL) return;
-    strcpy(id, node->data.guestId);  /* Sao chép trước vì node sẽ bị free */
+    strcpy(id, node->data.guestId);
     if (hasActiveBookingForGuest(g_bookings, id)) {
         printf("[!] Khong the xoa: khach %s dang co phieu dat hoac dang o.\n", id);
         return;
@@ -389,9 +364,6 @@ static void menuGuest(void) {
     } while (choice != 0);
 }
 
-/* ========================= ĐẶT PHÒNG ========================= */
-
-/* Nhập cặp ngày [nhận, trả) và kiểm tra ngày trả > ngày nhận */
 static void inputDateRange(Date *in, Date *out) {
     for (;;) {
         *in = inputDate("Ngay nhan phong (dd/mm/yyyy): ");
@@ -416,11 +388,6 @@ static void uiCheckAvailability(void) {
     listAvailableRooms(g_rooms, g_bookings, in, out);
 }
 
-/*
- * Luồng đặt phòng: nhập ngày -> chọn phòng trống -> chọn khách (tìm theo
- * tên/CCCD/SĐT, chọn theo STT, hoặc thêm khách mới ngay) -> xác nhận.
- * Không bắt người dùng phải nhớ mã khách.
- */
 static void uiCreateBooking(void) {
     char roomId[ROOM_ID_LEN];
     GuestNode *guest;
@@ -436,14 +403,12 @@ static void uiCreateBooking(void) {
         return;
     }
 
-    /* Bước 1: khoảng ngày */
     inputDateRange(&in, &out);
     if (compareDate(in, getToday()) < 0 &&
         !inputYesNo("Ngay nhan phong da qua. Van tiep tuc?")) {
         return;
     }
 
-    /* Bước 2: chọn phòng trong danh sách phòng trống */
     if (listAvailableRooms(g_rooms, g_bookings, in, out) == 0) {
         printf("[!] Khong con phong trong trong khoang ngay nay.\n");
         return;
@@ -461,7 +426,6 @@ static void uiCreateBooking(void) {
         if (!inputYesNo("Chon phong khac?")) return;
     }
 
-    /* Bước 3: chọn khách */
     printf("\n--- Chon khach dat phong ---\n");
     guest = pickGuest(1);
     if (guest == NULL) {
@@ -470,7 +434,6 @@ static void uiCreateBooking(void) {
     }
     printf("Khach: %s - %s - CCCD %s\n", guest->data.guestId, guest->data.fullName, guest->data.idCard);
 
-    /* Tạm tính để khách xác nhận */
     memset(&preview, 0, sizeof(preview));
     preview.checkIn = in;
     preview.checkOut = out;
@@ -550,8 +513,7 @@ static void uiCheckOut(void) {
         printf("  [!] Ngay tra khong duoc truoc ngay nhan phong.\n");
         actual = inputDateOrKeep("Ngay tra thuc te", b->data.checkOut);
     }
-    /* Trả muộn: kiểm tra khoảng ở thêm [ngày trả dự kiến, ngày trả thực tế)
-     * có đè lên phiếu đặt khác của cùng phòng hay không */
+
     if (compareDate(actual, b->data.checkOut) > 0 &&
         !isRoomAvailable(g_bookings, b->data.roomId, b->data.checkOut, actual)) {
         printf("[!] Canh bao: khoang tra muon trung voi phieu dat khac cua phong %s.\n", b->data.roomId);
@@ -626,8 +588,6 @@ static void menuBooking(void) {
     } while (choice != 0);
 }
 
-/* ========================== THỐNG KÊ ========================== */
-
 static void menuReport(void) {
     int choice, year;
     do {
@@ -650,8 +610,6 @@ static void menuReport(void) {
         if (choice != 0) pauseScreen();
     } while (choice != 0);
 }
-
-/* ========================== MENU CHÍNH ========================== */
 
 static void menuLoop(void) {
     int choice;

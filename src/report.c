@@ -1,11 +1,7 @@
-/*
- * report.c - Cài đặt các chức năng thống kê.
- */
 #include <stdio.h>
 #include "report.h"
 
-/* Doanh thu tháng tính theo đệ quy:
- * sum(p) = (p thỏa điều kiện ? p->totalAmount : 0) + sum(p->next) */
+/* De quy cong doanh thu theo tung phieu. */
 double sumRevenue(const BookingNode *p, int month, int year) {
     double here = 0.0;
     if (p == NULL) return 0.0;
