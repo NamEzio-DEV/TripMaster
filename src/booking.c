@@ -1,9 +1,3 @@
-/*
- * booking.c - Cài đặt nghiệp vụ đặt phòng.
- *
- * Phòng không lưu trạng thái "trống". Một phòng trống trong khoảng
- * [in, out) khi không có phiếu Đã đặt / Đang ở nào trùng khoảng đó.
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,8 +36,7 @@ int nightsBetween(Date in, Date out) {
     return (int)(dateToDays(out) - dateToDays(in));
 }
 
-/* Hai khoảng [newIn, newOut) và [oldIn, oldOut) trùng nhau khi
- * newIn < oldOut && newOut > oldIn. Đặt nối tiếp (10-12 và 12-14) không trùng. */
+/* Hai khoang [in, out) giao nhau neu in1 < out2 va out1 > in2. */
 int isDateRangeOverlap(Date newIn, Date newOut, Date oldIn, Date oldOut) {
     return compareDate(newIn, oldOut) < 0 && compareDate(newOut, oldIn) > 0;
 }
@@ -58,7 +51,6 @@ int isRoomAvailable(const BookingNode *head, const char *roomId, Date in, Date o
     return 1;
 }
 
-/* Đếm số phòng trống trong [in, out) bằng đệ quy trên danh sách phòng */
 int countAvailable(const RoomNode *p, Date in, Date out, const BookingNode *bk) {
     if (p == NULL) return 0;
     return (isRoomAvailable(bk, p->data.roomId, in, out) ? 1 : 0)
@@ -108,8 +100,6 @@ int nextBookingId(const BookingNode *head) {
     return maxId + 1;
 }
 
-/* ---------- Tính tiền ---------- */
-
 double calcAmount(const Booking *b, double pricePerNight, Date actualOut, Invoice *inv) {
     Invoice tmp;
     Invoice *v = (inv != NULL) ? inv : &tmp;
@@ -126,8 +116,6 @@ double calcAmount(const Booking *b, double pricePerNight, Date actualOut, Invoic
     v->total = v->roomCharge - v->discount + v->lateFee;
     return v->total;
 }
-
-/* ---------- Thao tác nghiệp vụ ---------- */
 
 int createBooking(BookingNode **head, RoomNode *rooms, GuestNode *guests,
                   const char *roomId, const char *guestId,
@@ -175,12 +163,6 @@ int checkIn(BookingNode *head, int bookingId) {
     return BK_OK;
 }
 
-/*
- * Trả phòng: chỉ áp dụng cho phiếu đang ở.
- * - Trả sớm: vẫn tính đủ số đêm đã đặt.
- * - Trả muộn: mỗi ngày muộn tính thêm 1 đêm + phụ thu LATE_FEE_RATE,
- *   và ngày trả của phiếu được cập nhật thành ngày trả thực tế.
- */
 int checkOut(BookingNode *head, RoomNode *rooms, int bookingId, Date actualOut, Invoice *inv) {
     BookingNode *b = findBookingById(head, bookingId);
     RoomNode *room;
@@ -204,8 +186,6 @@ int cancelBooking(BookingNode *head, int bookingId) {
     b->data.totalAmount = 0.0;
     return BK_OK;
 }
-
-/* ---------- In ấn ---------- */
 
 void printInvoice(const Booking *b, const Room *r, const Guest *g, const Invoice *inv) {
     char in[DATE_STR_LEN], out[DATE_STR_LEN];
@@ -267,11 +247,7 @@ int printBookings(const BookingNode *head, int statusFilter) {
     return count;
 }
 
-/*
- * In lịch sử đặt phòng của một khách theo thứ tự mới nhất trước.
- * Phiếu mới luôn được thêm vào cuối danh sách, nên ta đệ quy xuống cuối
- * trước rồi mới in phần tử hiện tại khi quay lui.
- */
+/* In khi quay lui de phieu moi nhat hien truoc. */
 int printHistoryReverse(const BookingNode *p, const char *guestId) {
     int count;
     if (p == NULL) return 0;

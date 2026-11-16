@@ -1,6 +1,3 @@
-/*
- * guest.c - Cài đặt các thao tác trên danh sách khách hàng.
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,7 +73,6 @@ void generateGuestId(GuestNode *head, char *out, int size) {
     size_t prefixLen = strlen(GUEST_ID_PREFIX);
     long maxNo = 0;
 
-    /* Tìm số thứ tự lớn nhất trong các mã dạng KHxxx */
     for (p = head; p != NULL; p = p->next) {
         const char *id = p->data.guestId;
         if (strlen(id) > prefixLen && strncmp(id, GUEST_ID_PREFIX, prefixLen) == 0 &&
@@ -85,7 +81,7 @@ void generateGuestId(GuestNode *head, char *out, int size) {
             if (n > maxNo) maxNo = n;
         }
     }
-    /* Vòng lặp phòng trường hợp mã đã bị dùng (dữ liệu nhập tay trước đây) */
+
     do {
         maxNo++;
         snprintf(out, (size_t)size, "%s%03ld", GUEST_ID_PREFIX, maxNo);

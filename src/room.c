@@ -1,6 +1,3 @@
-/*
- * room.c - Cài đặt các thao tác trên danh sách phòng.
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,7 +21,6 @@ RoomNode *findRoomById(RoomNode *head, const char *roomId) {
     return NULL;
 }
 
-/* Thêm phòng vào cuối danh sách để giữ đúng thứ tự khi ghi/đọc file */
 int addRoom(RoomNode **head, Room r) {
     RoomNode *node, *p;
     if (findRoomById(*head, r.roomId) != NULL) return LIST_DUPLICATE;
@@ -43,11 +39,6 @@ int addRoom(RoomNode **head, Room r) {
     return LIST_OK;
 }
 
-/*
- * Xóa phòng theo mã. Dùng con trỏ tới con trỏ (RoomNode **) nên xử lý
- * chung được cả ba trường hợp: node đầu, node giữa và node cuối.
- * Việc kiểm tra "phòng còn đặt chưa trả" do tầng nghiệp vụ (booking) làm.
- */
 int deleteRoom(RoomNode **head, const char *roomId) {
     RoomNode **pp = head;
     while (*pp != NULL) {
@@ -75,8 +66,6 @@ int countRooms(const RoomNode *head) {
     return n;
 }
 
-/* ---------- Sắp xếp ---------- */
-
 int cmpRoomById(const Room *a, const Room *b) {
     return strcmp(a->roomId, b->roomId);
 }
@@ -96,11 +85,6 @@ int cmpRoomByTypeThenPrice(const Room *a, const Room *b) {
     return cmpRoomByPriceAsc(a, b);
 }
 
-/*
- * Sắp xếp chọn (selection sort) trên danh sách liên kết.
- * Chỉ hoán đổi phần data, không cần nối lại con trỏ next.
- * Tiêu chí sắp xếp được truyền vào qua con trỏ hàm cmp.
- */
 void sortRooms(RoomNode *head, RoomCompareFn cmp) {
     RoomNode *i, *j, *best;
     Room tmp;
@@ -117,8 +101,6 @@ void sortRooms(RoomNode *head, RoomCompareFn cmp) {
     }
 }
 
-/* ---------- Lọc ---------- */
-
 int filterRoomByType(const Room *r, const void *ctx) {
     return r->type == *(const int *)ctx;
 }
@@ -128,12 +110,9 @@ int filterRoomByPrice(const Room *r, const void *ctx) {
     return r->pricePerNight >= range->minPrice && r->pricePerNight <= range->maxPrice;
 }
 
-/* Tìm gần đúng: "2" khớp P201, P202, P102...; không phân biệt hoa thường */
 int filterRoomByIdContains(const Room *r, const void *ctx) {
     return containsIgnoreCase(r->roomId, (const char *)ctx);
 }
-
-/* ---------- In ---------- */
 
 void printRoomHeader(void) {
     printf("+------------+------+-----------------+----------------------------------------------------+\n");

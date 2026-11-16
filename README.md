@@ -65,3 +65,17 @@ Muốn bắt đầu với dữ liệu trống thì xóa thư mục `data/`; chư
 - `sumRevenue` (report.c): tổng doanh thu một tháng.
 - `printHistoryReverse` (booking.c): lịch sử đặt phòng của một khách, mới nhất trước.
 - `countAvailable` (booking.c): đếm số phòng trống trong một khoảng ngày.
+
+
+## Chạy bộ dữ liệu demo
+
+Thư mục `demo_data/` có sẵn 6 phòng, 5 khách và 7 phiếu đặt ở các trạng thái Đã đặt, Đang ở, Đã trả và Hủy. Dữ liệu này tách riêng với `data/`, nên có thể dùng để xem các menu mà không cần nhập lại thông tin.
+
+Chạy từ thư mục gốc của project, truyền `demo_data` làm tham số:
+
+```text
+Windows: hotel.exe demo_data
+macOS/Linux: ./hotel demo_data
+```
+
+Nếu dùng CMake, thay `hotel.exe` hoặc `./hotel` bằng đường dẫn tới executable vừa build, ví dụ `cmake-build-debug/TripMaster.exe demo_data` trên Windows. Đường dẫn `demo_data` được tính từ thư mục làm việc hiện tại.

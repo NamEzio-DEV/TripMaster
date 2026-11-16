@@ -1,6 +1,3 @@
-/*
- * fileio.c - Cài đặt đọc/ghi file nhị phân.
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +12,7 @@
 #define MAKE_DIR(path) mkdir(path, 0755)
 #endif
 
-#define MAX_RECORDS 1000000   /* Chặn số bản ghi vô lý khi file bị hỏng */
+#define MAX_RECORDS 1000000
 
 static char g_dataDir[DIR_LEN] = DATA_DIR;
 
@@ -39,7 +36,6 @@ static void buildPath(char *out, size_t size, const char *fileName) {
     snprintf(out, size, "%s%s", g_dataDir, fileName);
 }
 
-/* Tạo thư mục dữ liệu nếu chưa có (bỏ dấu '/' cuối trước khi gọi mkdir) */
 static void ensureDataDir(void) {
     char dir[DIR_LEN];
     size_t len;
@@ -47,14 +43,10 @@ static void ensureDataDir(void) {
     len = strlen(dir);
     while (len > 1 && (dir[len - 1] == '/' || dir[len - 1] == '\\')) dir[--len] = '\0';
     if (MAKE_DIR(dir) != 0 && errno != EEXIST) {
-        /* Không tạo được: fopen ở bước sau sẽ báo lỗi cụ thể */
+
     }
 }
 
-/*
- * Ghi an toàn: ghi vào file tạm trước, ghi xong mới thay file cũ.
- * Nếu chương trình dừng giữa chừng thì file cũ vẫn còn nguyên.
- */
 static FILE *openTemp(const char *fileName, char *tmpPath, size_t size) {
     FILE *f;
     ensureDataDir();
@@ -64,6 +56,7 @@ static FILE *openTemp(const char *fileName, char *tmpPath, size_t size) {
     return f;
 }
 
+/* Ghi vao file .tmp truoc, ghi xong moi doi ten thanh file chinh. */
 static int commitTemp(FILE *f, const char *fileName, const char *tmpPath, int ok) {
     char path[PATH_LEN];
     if (fclose(f) != 0) ok = 0;
@@ -73,7 +66,7 @@ static int commitTemp(FILE *f, const char *fileName, const char *tmpPath, int ok
         return 0;
     }
     buildPath(path, sizeof(path), fileName);
-    remove(path);  /* Trên Windows, rename không ghi đè file đã có */
+    remove(path);
     if (rename(tmpPath, path) != 0) {
         printf("[!] Khong doi ten duoc %s thanh %s.\n", tmpPath, path);
         return 0;
@@ -81,13 +74,12 @@ static int commitTemp(FILE *f, const char *fileName, const char *tmpPath, int ok
     return 1;
 }
 
-/* Mở file để đọc và đọc số bản ghi ở đầu file. Trả về NULL nếu chưa có file. */
 static FILE *openForRead(const char *fileName, int *count) {
     char path[PATH_LEN];
     FILE *f;
     buildPath(path, sizeof(path), fileName);
     f = fopen(path, "rb");
-    if (f == NULL) return NULL;  /* Lần chạy đầu: chưa có file, bắt đầu rỗng */
+    if (f == NULL) return NULL;
     if (fread(count, sizeof(int), 1, f) != 1 || *count < 0 || *count > MAX_RECORDS) {
         printf("[!] File %s bi hong hoac rong, bo qua.\n", path);
         fclose(f);
@@ -96,8 +88,7 @@ static FILE *openForRead(const char *fileName, int *count) {
     return f;
 }
 
-/* ===================== PHÒNG ===================== */
-
+/* Moi file bat dau bang so ban ghi, sau do la cac struct ghi lien tiep. */
 int saveRooms(const RoomNode *head) {
     char tmp[PATH_LEN];
     const RoomNode *p;
@@ -121,6 +112,7 @@ int loadRooms(RoomNode **head) {
             printf("[!] %s: chi doc duoc %d/%d ban ghi.\n", ROOMS_FILE, i, count);
             break;
         }
+        /* Dam bao cac truong chuoi co ky tu ket thuc. */
         r.roomId[ROOM_ID_LEN - 1] = '\0';
         r.note[ROOM_NOTE_LEN - 1] = '\0';
         if (r.type < ROOM_SINGLE || r.type > ROOM_VIP || r.roomId[0] == '\0') continue;
@@ -129,8 +121,6 @@ int loadRooms(RoomNode **head) {
     fclose(f);
     return loaded;
 }
-
-/* ===================== KHÁCH ===================== */
 
 int saveGuests(const GuestNode *head) {
     char tmp[PATH_LEN];
@@ -155,6 +145,7 @@ int loadGuests(GuestNode **head) {
             printf("[!] %s: chi doc duoc %d/%d ban ghi.\n", GUESTS_FILE, i, count);
             break;
         }
+        /* Dam bao cac truong chuoi co ky tu ket thuc. */
         g.guestId[GUEST_ID_LEN - 1] = '\0';
         g.fullName[GUEST_NAME_LEN - 1] = '\0';
         g.idCard[ID_CARD_LEN - 1] = '\0';
@@ -165,8 +156,6 @@ int loadGuests(GuestNode **head) {
     fclose(f);
     return loaded;
 }
-
-/* ===================== ĐẶT PHÒNG ===================== */
 
 int saveBookings(const BookingNode *head) {
     char tmp[PATH_LEN];
@@ -215,8 +204,6 @@ int loadBookings(BookingNode **head) {
     fclose(f);
     return loaded;
 }
-
-/* ===================== TỔNG HỢP ===================== */
 
 int saveAll(const RoomNode *rooms, const GuestNode *guests, const BookingNode *bookings) {
     int ok = 1;
