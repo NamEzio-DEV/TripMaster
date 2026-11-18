@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(TripMaster C)
+project(RoomHub C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-add_executable(TripMaster
+add_executable(RoomHub
         src/main.c
         src/booking.c
         src/fileio.c
@@ -15,4 +15,4 @@ add_executable(TripMaster
         src/utils.c
 )
 
-target_include_directories(TripMaster PRIVATE src)
+target_include_directories(RoomHub PRIVATE src)

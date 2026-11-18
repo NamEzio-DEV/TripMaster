@@ -1,4 +1,4 @@
-# Quản lý đặt phòng khách sạn (BTL Kỹ thuật lập trình – Đề tài 6)
+# RoomHub - Quản lý đặt phòng khách sạn (BTL Kỹ thuật lập trình – Đề tài 6)
 
 Chương trình console viết bằng C99. Dữ liệu được lưu trong RAM bằng 3 danh sách liên kết đơn (phòng, khách, phiếu đặt) và ghi xuống file nhị phân `.dat`.
 
@@ -23,16 +23,16 @@ build.bat             script biên dịch trên Windows
 Cần có `gcc` (MinGW, w64devkit, hoặc gcc đi kèm Dev-C++ / Code::Blocks). Chạy từ thư mục gốc của dự án:
 
 ```
-gcc -std=c99 -Wall -Wextra src/*.c -o hotel
-hotel                 # dùng thư mục mặc định data/
-hotel D:\du_lieu      # truyền thư mục dữ liệu qua đối dòng lệnh
+gcc -std=c99 -Wall -Wextra src/*.c -o roomhub
+roomhub                 # dùng thư mục mặc định data/
+roomhub D:\du_lieu      # truyền thư mục dữ liệu qua đối dòng lệnh
 ```
 
 Trên Windows có thể chạy `build.bat` thay cho lệnh gcc.
 
 Đường dẫn `data/` tính từ thư mục làm việc hiện tại. Nếu chạy trong IDE mà không thấy dữ liệu, hãy đặt thư mục làm việc là thư mục gốc dự án.
 
-Muốn bắt đầu với dữ liệu trống thì xóa thư mục `data/`; chương trình sẽ tự tạo lại. Muốn tạo lại dữ liệu mẫu: xóa `data/` rồi chạy `hotel < tests\seed_input.txt`.
+Muốn bắt đầu với dữ liệu trống thì xóa thư mục `data/`; chương trình sẽ tự tạo lại. Muốn tạo lại dữ liệu mẫu: xóa `data/` rồi chạy `roomhub < tests\seed_input.txt`.
 
 ## Quy tắc nghiệp vụ
 
@@ -74,8 +74,8 @@ Thư mục `demo_data/` có sẵn 6 phòng, 5 khách và 7 phiếu đặt ở c�
 Chạy từ thư mục gốc của project, truyền `demo_data` làm tham số:
 
 ```text
-Windows: hotel.exe demo_data
-macOS/Linux: ./hotel demo_data
+Windows: roomhub.exe demo_data
+macOS/Linux: ./roomhub demo_data
 ```
 
-Nếu dùng CMake, thay `hotel.exe` hoặc `./hotel` bằng đường dẫn tới executable vừa build, ví dụ `cmake-build-debug/TripMaster.exe demo_data` trên Windows. Đường dẫn `demo_data` được tính từ thư mục làm việc hiện tại.
+Nếu dùng CMake, thay `roomhub.exe` hoặc `./roomhub` bằng đường dẫn tới executable vừa build, ví dụ `cmake-build-debug/RoomHub.exe demo_data` trên Windows. Đường dẫn `demo_data` được tính từ thư mục làm việc hiện tại.
