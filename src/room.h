@@ -1,26 +1,26 @@
 #ifndef ROOM_H
 #define ROOM_H
 
-#define ROOM_ID_LEN   10
-#define ROOM_NOTE_LEN 50
+#define ROOM_ID_LEN   10 /* Do dai bo dem ma phong, tinh ca ky tu ket thuc chuoi. */
+#define ROOM_NOTE_LEN 50 /* Do dai bo dem ghi chu phong, tinh ca ky tu ket thuc chuoi. */
 
-#define ROOM_SINGLE 1
-#define ROOM_DOUBLE 2
-#define ROOM_VIP    3
+#define ROOM_SINGLE 1 /* Ma loai phong don. */
+#define ROOM_DOUBLE 2 /* Ma loai phong doi. */
+#define ROOM_VIP    3 /* Ma loai phong VIP. */
 
 #define MIN_ROOM_PRICE 1.0
 #define MAX_ROOM_PRICE 1000000000.0
 
 typedef struct {
-    char   roomId[ROOM_ID_LEN];
-    int    type;
-    double pricePerNight;
-    char   note[ROOM_NOTE_LEN];
+    char   roomId[ROOM_ID_LEN];       /* Ma phong duy nhat. */
+    int    type;                      /* Loai phong Don, Doi hoac VIP. */
+    double pricePerNight;             /* Gia mot dem, tinh bang VND. */
+    char   note[ROOM_NOTE_LEN];       /* Ghi chu tuy chon ve phong. */
 } Room;
 
 typedef struct RoomNode {
-    Room data;
-    struct RoomNode *next;
+    Room data;                        /* Du lieu cua phong tai nut nay. */
+    struct RoomNode *next;            /* Dia chi nut phong tiep theo. */
 } RoomNode;
 
 #define LIST_OK         0

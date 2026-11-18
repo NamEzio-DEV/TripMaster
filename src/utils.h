@@ -3,15 +3,15 @@
 
 #include <stddef.h>
 
-#define MIN_YEAR 1900
-#define MAX_YEAR 9999
-#define LINE_BUF 256
-#define DATE_STR_LEN 11
+#define MIN_YEAR 1900 /* Nam nho nhat duoc chap nhan. */
+#define MAX_YEAR 9999 /* Nam lon nhat duoc chap nhan. */
+#define LINE_BUF 256 /* So byte toi da cua mot dong nhap tam thoi. */
+#define DATE_STR_LEN 11 /* Bo dem ngay dd/mm/yyyy, gom ca ky tu ket thuc. */
 
 typedef struct {
-    int day;
-    int month;
-    int year;
+    int day;   /* Ngay trong thang, tu 1 den so ngay cua thang. */
+    int month; /* Thang trong nam, tu 1 den 12. */
+    int year;  /* Nam day du, vi du 2026. */
 } Date;
 
 int  isLeapYear(int year);

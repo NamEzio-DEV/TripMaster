@@ -6,16 +6,16 @@
 #include "guest.h"
 
 /* Trang thai phieu */
-#define BK_BOOKED     0
-#define BK_STAYING    1
-#define BK_CHECKEDOUT 2
-#define BK_CANCELLED  3
+#define BK_BOOKED     0 /* Phieu da tao, khach chua nhan phong. */
+#define BK_STAYING    1 /* Khach dang o phong. */
+#define BK_CHECKEDOUT 2 /* Khach da tra phong va da tinh tien. */
+#define BK_CANCELLED  3 /* Phieu da bi huy, khong con chiem lich. */
 
 /* Chinh sach tinh tien va gioi han */
-#define LONG_STAY_NIGHTS   7
-#define LONG_STAY_DISCOUNT 0.10
-#define LATE_FEE_RATE      0.50
-#define MAX_NIGHTS         365
+#define LONG_STAY_NIGHTS   7    /* So dem toi thieu de duoc giam gia o dai ngay. */
+#define LONG_STAY_DISCOUNT 0.10 /* Ty le giam 10% tien phong. */
+#define LATE_FEE_RATE      0.50 /* Phu thu 50% cho moi dem tra muon. */
+#define MAX_NIGHTS         365  /* Gioi han so dem toi da cua mot phieu. */
 
 /* Ma loi nghiep vu */
 #define BK_OK               0
@@ -29,12 +29,12 @@
 #define BK_ERR_TOO_LONG    -8
 
 typedef struct {
-    int    bookingId;
-    char   roomId[ROOM_ID_LEN];
-    char   guestId[GUEST_ID_LEN];
-    Date   checkIn, checkOut;
-    int    status;
-    double totalAmount;
+    int    bookingId;                 /* Ma phieu dat phong. */
+    char   roomId[ROOM_ID_LEN];       /* Ma phong duoc dat. */
+    char   guestId[GUEST_ID_LEN];     /* Ma khach dat phong. */
+    Date   checkIn, checkOut;         /* Ngay nhan va ngay tra du kien/thuc te. */
+    int    status;                    /* Trang thai phieu, dung cac hang BK_*. */
+    double totalAmount;               /* Tong tien sau khi thanh toan. */
 } Booking;
 
 typedef struct BookingNode {
@@ -43,12 +43,12 @@ typedef struct BookingNode {
 } BookingNode;
 
 typedef struct {
-    int    nights;
-    double roomCharge;
-    double discount;
-    int    lateDays;
-    double lateFee;
-    double total;
+    int    nights;                    /* So dem tinh tien theo lich dat. */
+    double roomCharge;                /* Tien phong truoc giam gia/phu thu. */
+    double discount;                  /* So tien duoc giam khi o dai ngay. */
+    int    lateDays;                  /* So ngay tra muon. */
+    double lateFee;                   /* Phu thu tra muon. */
+    double total;                     /* Tong tien cuoi cung phai thanh toan. */
 } Invoice;
 
 const char *bookingStatusName(int status);
